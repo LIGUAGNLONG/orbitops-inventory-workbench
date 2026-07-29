@@ -18,7 +18,40 @@
 let DATA=null; const money=n=>(Number(n)||0).toLocaleString('zh-CN',{maximumFractionDigits:0}); const pct=n=>Number.isFinite(+n)?(+n).toFixed(2):'';
 function cls(v){return (+v)>=0?'pos':'neg'}
 function rowsToTable(el, rows, cols){ if(!rows.length){el.innerHTML='<tr><td class="muted">无数据</td></tr>';return} el.innerHTML='<thead><tr>'+cols.map(c=>`<th>${c[1]}</th>`).join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+cols.map(c=>`<td class="${c[2]?c[2](r[c[0]]):''}">${c[3]?c[3](r[c[0]],r):r[c[0]]??''}</td>`).join('')+'</tr>').join('')+'</tbody>'; }
-function renderChart(rows){ const el=document.getElementById('chart'); const W=760,H=280,pad=42; const vals=[]; rows.forEach(r=>{vals.push(+r['基准预测']||0,+r['人工预测销量']||0,+r['乐观预测']||0)}); const max=Math.max(...vals,1)*1.12; const xs=rows.map((r,i)=>pad+i*(W-pad*2)/Math.max(rows.length-1,1)); const y=v=>H-pad-(v/max)*(H-pad*2); function line(field,color){return `<polyline fill="none" stroke="${color}" stroke-width="3" points="${rows.map((r,i)=>xs[i]+','+y(+r[field]||0)).join(' ')}"/>`+rows.map((r,i)=>`<circle cx="${xs[i]}" cy="${y(+r[field]||0)}" r="4" fill="${color}"/>`).join('')} el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%"><line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="#cbd5e1"/><line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" stroke="#cbd5e1"/>${line('基准预测','#2563eb')}${line('人工预测销量','#d97706')}${line('乐观预测','#16a34a')}${rows.map((r,i)=>`<text x="${xs[i]}" y="${H-16}" text-anchor="middle" font-size="12" fill="#64748b">${r['预测月份'].slice(5)}</text><text x="${xs[i]}" y="${y(+r['基准预测'])-10}" text-anchor="middle" font-size="11" fill="#2563eb">${money(r['基准预测'])}</text>`).join('')}<g transform="translate(${W-245},18)"><rect width="225" height="30" rx="10" fill="rgba(255,255,255,.8)"/><circle cx="14" cy="15" r="4" fill="#2563eb"/><text x="24" y="19" font-size="12">基准</text><circle cx="74" cy="15" r="4" fill="#d97706"/><text x="84" y="19" font-size="12">人工</text><circle cx="144" cy="15" r="4" fill="#16a34a"/><text x="154" y="19" font-size="12">乐观</text></g></svg>` }
+function renderChart(rows){
+  const el=document.getElementById('chart');
+  const W=820,H=330,padL=50,padR=36,padT=54,padB=42;
+  const vals=[]; rows.forEach(r=>{vals.push(+r['基准预测']||0,+r['人工预测销量']||0,+r['乐观预测']||0)});
+  const max=Math.max(...vals,1)*1.16;
+  const xs=rows.map((r,i)=>padL+i*(W-padL-padR)/Math.max(rows.length-1,1));
+  const y=v=>H-padB-(v/max)*(H-padT-padB);
+  const series=[
+    {field:'基准预测',name:'基准',color:'#2563eb',dx:-2},
+    {field:'人工预测销量',name:'人工',color:'#d97706',dx:0},
+    {field:'乐观预测',name:'乐观',color:'#16a34a',dx:2}
+  ];
+  function line(s){return `<polyline fill="none" stroke="${s.color}" stroke-width="3" points="${rows.map((r,i)=>xs[i]+','+y(+r[s.field]||0)).join(' ')}"/>`+rows.map((r,i)=>`<circle cx="${xs[i]}" cy="${y(+r[s.field]||0)}" r="4" fill="${s.color}"/>`).join('')}
+  function labels(){
+    let out='';
+    rows.forEach((r,i)=>{
+      let items=series.map(s=>({s,val:+r[s.field]||0,x:xs[i]+s.dx,y:y(+r[s.field]||0)-10})).sort((a,b)=>a.y-b.y);
+      const gap=15, top=18, bottom=H-padB-16;
+      for(let j=1;j<items.length;j++){ if(items[j].y-items[j-1].y<gap) items[j].y=items[j-1].y+gap; }
+      const overflow=items[items.length-1].y-bottom;
+      if(overflow>0){ items.forEach(it=>it.y-=overflow); }
+      for(let j=items.length-2;j>=0;j--){ if(items[j+1].y-items[j].y<gap) items[j].y=items[j+1].y-gap; }
+      const under=top-items[0].y;
+      if(under>0){ items.forEach(it=>it.y+=under); }
+      items.forEach(it=>{
+        const txt=money(it.val), w=Math.max(42,txt.length*7+8), tx=Math.max(padL-12,Math.min(W-padR+12,it.x));
+        out+=`<rect x="${tx-w/2}" y="${it.y-11}" width="${w}" height="14" rx="4" fill="rgba(255,255,255,.82)" stroke="rgba(203,213,225,.75)"/>`;
+        out+=`<text x="${tx}" y="${it.y}" text-anchor="middle" font-size="11" font-weight="700" fill="${it.s.color}">${txt}</text>`;
+      });
+    });
+    return out;
+  }
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" style="overflow:visible"><line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#cbd5e1"/><line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#cbd5e1"/>${series.map(line).join('')}${labels()}${rows.map((r,i)=>`<text x="${xs[i]}" y="${H-16}" text-anchor="middle" font-size="12" fill="#64748b">${r['预测月份'].slice(5)}</text>`).join('')}<g transform="translate(${W-255},16)"><rect width="236" height="32" rx="10" fill="rgba(255,255,255,.86)" stroke="rgba(203,213,225,.7)"/><circle cx="14" cy="16" r="4" fill="#2563eb"/><text x="24" y="20" font-size="12">基准</text><circle cx="82" cy="16" r="4" fill="#d97706"/><text x="92" y="20" font-size="12">人工</text><circle cx="154" cy="16" r="4" fill="#16a34a"/><text x="164" y="20" font-size="12">乐观</text></g></svg>`
+}
 function render(){ const model=document.getElementById('model').value, mon=document.getElementById('month').value, q=document.getElementById('q').value.trim().toLowerCase(); const mo=DATA.month_overview.filter(r=>r['预测类型']===model); const showMo=mon==='全部'?mo:mo.filter(r=>r['预测月份']===mon); const total=showMo.reduce((a,r)=>{['保守预测','基准预测','乐观预测','人工预测销量','基准-人工'].forEach(k=>a[k]=(a[k]||0)+(+r[k]||0)); return a},{}); document.getElementById('kpis').innerHTML=[['SKU数',DATA.meta.sku_count,'A/B/C/D 定级SKU'],['基准预测',money(total['基准预测']),'当前筛选合计'],['人工预测',money(total['人工预测销量']),'最新补货模型'],['基准-人工',money(total['基准-人工']),(total['基准-人工']||0)>=0?'高于人工':'低于人工'],['预测周期','7-12月',DATA.meta.grain]].map(x=>`<div class="card kpi"><div class="label">${x[0]}</div><div class="val">${x[1]}</div><div class="sub">${x[2]}</div></div>`).join(''); renderChart(mo); rowsToTable(document.getElementById('monthTable'),mo,[['预测月份','月份'],['保守预测','保守',null,money],['基准预测','基准',null,money],['乐观预测','乐观',null,money],['人工预测销量','人工',null,money],['基准-人工','差异',cls,money]]); const pos=DATA.position_summary.filter(r=>r['预测类型']===model && (mon==='全部'||r['预测月份']===mon)); rowsToTable(document.getElementById('posTable'),pos,[['产品定位','定位'],['SKU数','SKU'],['基准预测','基准',null,money],['人工预测销量','人工',null,money],['基准-人工','差异',cls,money]]); let cats=DATA.category_summary.filter(r=>r['预测类型']===model && (mon==='全部'||r['预测月份']===mon)); if(q) cats=cats.filter(r=>String(r['三级类目']).toLowerCase().includes(q)); cats=cats.sort((a,b)=>(+b['基准预测']||0)-(+a['基准预测']||0)).slice(0,30); rowsToTable(document.getElementById('catTable'),cats,[['三级类目','三级类目'],['SKU数','SKU'],['基准预测','基准',null,money],['人工预测销量','人工',null,money],['基准-人工','差异',cls,money]]); let owners=DATA.ops_owner_summary.filter(r=>r['预测类型']===model && (mon==='全部'||r['预测月份']===mon)); if(q) owners=owners.filter(r=>String(r['负责人（运营）']).toLowerCase().includes(q)); owners=owners.sort((a,b)=>(+b['基准预测']||0)-(+a['基准预测']||0)).slice(0,30); rowsToTable(document.getElementById('ownerTable'),owners,[['负责人（运营）','运营负责人'],['SKU数','SKU'],['基准预测','基准',null,money],['人工预测销量','人工',null,money],['基准-人工','差异',cls,money]]); let rev=DATA.review_top; if(mon!=='全部') rev=rev.filter(r=>r['预测月份']===mon); if(q) rev=rev.filter(r=>['SKU','产品名称','三级类目','负责人（运营）','负责人（计划）'].some(k=>String(r[k]||'').toLowerCase().includes(q))); rowsToTable(document.getElementById('reviewTable'),rev.slice(0,60),[['预测月份','月份'],['SKU','SKU'],['产品名称','产品名称'],['三级类目','类目'],['负责人（运营）','运营'],['产品定位','定位'],['基准预测','基准',null,money],['人工预测销量','人工',null,money],['基准-人工','差异',cls,money],['差异率','差异率',cls,v=>(+v*100).toFixed(1)+'%'],['复核标签','标签',null,v=>`<span class="pill danger">${v}</span>`]]); document.getElementById('src').innerHTML=`<b>数据源：</b>${DATA.source_file}<br><b>生成时间：</b>${DATA.generated_at}｜<b>源文件更新时间：</b>${DATA.meta.source_mtime}｜<b>口径：</b>${DATA.meta.forecast_object}，${DATA.meta.forecast_period}，${DATA.meta.grain}` }
 fetch('forecast_data.json?v='+Date.now()).then(r=>r.json()).then(d=>{DATA=d; const months=[...new Set(d.month_overview.map(r=>r['预测月份']))]; document.getElementById('month').innerHTML='<option value="全部">全部月份</option>'+months.map(m=>`<option>${m}</option>`).join(''); ['model','month','q'].forEach(id=>document.getElementById(id).addEventListener(id==='q'?'input':'change',render)); render();});
 </script></body></html>
