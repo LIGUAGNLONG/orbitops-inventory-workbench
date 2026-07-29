@@ -31,9 +31,11 @@
 </div>
 <script>
 const navs=[...document.querySelectorAll('.nav')], frame=document.getElementById('mainFrame'), openNew=document.getElementById('openNew');
+const BUILD_VERSION='20260729_需求预测标签修正版';
+function versioned(src){ return src + (src.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(BUILD_VERSION); }
 navs.forEach(btn=>btn.addEventListener('click',()=>{
   navs.forEach(x=>x.classList.remove('active')); btn.classList.add('active');
-  const src=btn.dataset.src; frame.src=src; openNew.href=src;
+  const src=btn.dataset.src; frame.src=versioned(src); openNew.href=versioned(src);
   document.getElementById('pageTitle').textContent='OrbitOps运营数据工作台｜'+btn.dataset.title;
   document.getElementById('pageCrumb').textContent=btn.dataset.crumb;
   document.getElementById('frameLabel').textContent=btn.dataset.title;
