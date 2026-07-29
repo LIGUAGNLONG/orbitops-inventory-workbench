@@ -31,7 +31,7 @@
 </div>
 <script>
 const navs=[...document.querySelectorAll('.nav')], frame=document.getElementById('mainFrame'), openNew=document.getElementById('openNew');
-const BUILD_VERSION='20260729_SKU历史6月销量版';
+const BUILD_VERSION='20260729_SKU近3月含当月销量版';
 function versioned(src){ return src + (src.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(BUILD_VERSION); }
 navs.forEach(btn=>btn.addEventListener('click',()=>{
   navs.forEach(x=>x.classList.remove('active')); btn.classList.add('active');
