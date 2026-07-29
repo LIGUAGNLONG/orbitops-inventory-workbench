@@ -22,16 +22,16 @@
   <main class="main">
     <header class="top">
       <div><div class="title" id="pageTitle">OrbitOps运营数据工作台｜库存监控</div><div class="crumb" id="pageCrumb">飞书工作台 / 运营看板 / 库存监控 · FBA仓库存 + 海外仓库存</div></div>
-      <div class="actions"><span class="pill">FBA仓库存 + 海外仓库存</span><span class="pill">FBA库龄：数量 + 成本</span><a class="btn" id="openNew" href="dashboard.html" target="_blank">新窗口打开当前模块</a></div>
+      <div class="actions"><span class="pill">FBA仓库存 + 海外仓库存</span><span class="pill">FBA库龄：数量 + 成本</span><a class="btn" id="openNew" href="dashboard.html?v=20260729_%E5%BA%93%E5%AD%98%E7%9B%91%E6%8E%A7%E5%88%A0%E9%99%A4%E5%88%86%E7%B1%BB%E6%88%90%E6%9C%AC%E9%A3%8E%E9%99%A9%E6%A8%A1%E5%9D%97%E7%89%88" target="_blank">新窗口打开当前模块</a></div>
     </header>
     <section class="content">
-      <div class="frame-card"><div class="frame-head"><div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div id="frameLabel">库存监控看板</div><div class="warn">GitHub Pages 固定链接，数据随发布版本更新</div></div><iframe id="mainFrame" src="dashboard.html"></iframe></div>
+      <div class="frame-card"><div class="frame-head"><div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div id="frameLabel">库存监控看板</div><div class="warn">GitHub Pages 固定链接，数据随发布版本更新</div></div><iframe id="mainFrame" src="dashboard.html?v=20260729_%E5%BA%93%E5%AD%98%E7%9B%91%E6%8E%A7%E5%88%A0%E9%99%A4%E5%88%86%E7%B1%BB%E6%88%90%E6%9C%AC%E9%A3%8E%E9%99%A9%E6%A8%A1%E5%9D%97%E7%89%88"></iframe></div>
     </section>
   </main>
 </div>
 <script>
 const navs=[...document.querySelectorAll('.nav')], frame=document.getElementById('mainFrame'), openNew=document.getElementById('openNew');
-const BUILD_VERSION='20260729_SKU近3月7月补全版';
+const BUILD_VERSION='20260729_库存监控删除分类成本风险模块版';
 function versioned(src){ return src + (src.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(BUILD_VERSION); }
 navs.forEach(btn=>btn.addEventListener('click',()=>{
   navs.forEach(x=>x.classList.remove('active')); btn.classList.add('active');
