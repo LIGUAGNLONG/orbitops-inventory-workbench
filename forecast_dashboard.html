@@ -11,6 +11,7 @@
   <section class="filters"><select id="model"><option>基础预测</option><option>LightGBM</option><option>CatBoost</option></select><select id="month"><option value="全部">全部月份</option></select><select id="series"><option value="全部">全部系列</option></select><select id="category"><option value="全部">全部三级类目</option></select><input id="q" placeholder="搜索类目 / 负责人 / SKU / 系列"/></section>
   <section class="grid two"><div class="card"><h2>月度预测趋势</h2><div id="chart" class="chart"></div></div><div class="card"><h2>月度总览</h2><div class="scroll"><table id="monthTable"></table></div></div></section>
   <section class="grid three" style="margin-top:14px"><div class="card"><h2>产品定位汇总</h2><div class="scroll"><table id="posTable"></table></div></div><div class="card"><h2>三级类目 TOP</h2><div class="scroll"><table id="catTable"></table></div></div><div class="card"><h2>负责人 TOP</h2><div class="scroll"><table id="ownerTable"></table></div></div></section>
+  <section class="card" style="margin-top:14px"><h2>SKU维度预测明细</h2><div class="note">按 SKU 聚合当前筛选范围内的保守、基准、乐观和人工预测，默认按基准预测降序展示。</div><div class="scroll"><table id="skuTable"></table></div></section>
   <section class="card" style="margin-top:14px"><h2>人工差异与低置信复核清单 TOP</h2><div class="note">优先看差异绝对值大、人工差异超过30%、人工缺失但基础有量的 SKU。</div><div class="scroll"><table id="reviewTable"></table></div></section>
   <section class="src" id="src"></section>
 </div>
@@ -54,6 +55,7 @@ function renderChart(rows){
 }
 function sumRows(rows){return rows.reduce((a,r)=>{['保守预测','基准预测','乐观预测','人工预测销量','基准-人工'].forEach(k=>a[k]=(a[k]||0)+(+r[k]||0)); return a},{})}
 function groupRows(rows,key){const m=new Map(); rows.forEach(r=>{const k=r[key]||'其他'; if(!m.has(k)) m.set(k,{[key]:k,SKU集合:new Set(),保守预测:0,基准预测:0,乐观预测:0,人工预测销量:0,'基准-人工':0}); const o=m.get(k); o.SKU集合.add(r.SKU||''); ['保守预测','基准预测','乐观预测','人工预测销量','基准-人工'].forEach(f=>o[f]+=+r[f]||0);}); return [...m.values()].map(o=>{o.SKU数=o.SKU集合.size; delete o.SKU集合; ['保守预测','基准预测','乐观预测','人工预测销量','基准-人工'].forEach(f=>o[f]=Math.round(o[f]*100)/100); return o;});}
+function skuRows(rows){const m=new Map(); rows.forEach(r=>{const k=r.SKU||'其他'; if(!m.has(k)) m.set(k,{SKU:k,产品名称:r['产品名称']||'',系列名称:r['系列名称']||'',三级类目:r['三级类目']||'',负责人:r['负责人（运营）']||'',产品定位:r['产品定位']||'',保守预测:0,基准预测:0,乐观预测:0,人工预测销量:0,'基准-人工':0}); const o=m.get(k); ['保守预测','基准预测','乐观预测','人工预测销量','基准-人工'].forEach(f=>o[f]+=+r[f]||0);}); return [...m.values()].map(o=>{['保守预测','基准预测','乐观预测','人工预测销量','基准-人工'].forEach(f=>o[f]=Math.round(o[f]*100)/100); return o;});}
 function monthRows(rows){return groupRows(rows,'预测月份').sort((a,b)=>String(a['预测月份']).localeCompare(String(b['预测月份'])))}
 function render(){
  const model=document.getElementById('model').value, mon=document.getElementById('month').value, series=document.getElementById('series').value, category=document.getElementById('category').value, q=document.getElementById('q').value.trim().toLowerCase();
@@ -75,6 +77,8 @@ function render(){
  rowsToTable(document.getElementById('catTable'),cats,[['三级类目','三级类目'],['SKU数','SKU'],['基准预测','基准',null,money],['人工预测销量','人工',null,money],['基准-人工','差异',cls,money]]);
  const owners=groupRows(filtered,'负责人（运营）').sort((a,b)=>(+b['基准预测']||0)-(+a['基准预测']||0)).slice(0,30);
  rowsToTable(document.getElementById('ownerTable'),owners,[['负责人（运营）','运营负责人'],['SKU数','SKU'],['基准预测','基准',null,money],['人工预测销量','人工',null,money],['基准-人工','差异',cls,money]]);
+ const skus=skuRows(filtered).sort((a,b)=>(+b['基准预测']||0)-(+a['基准预测']||0)).slice(0,120);
+ rowsToTable(document.getElementById('skuTable'),skus,[['SKU','SKU'],['产品名称','产品名称'],['系列名称','系列'],['三级类目','三级类目'],['负责人','运营'],['产品定位','定位'],['保守预测','保守',null,money],['基准预测','基准',null,money],['乐观预测','乐观',null,money],['人工预测销量','人工',null,money],['基准-人工','差异',cls,money]]);
  let rev=(DATA.review_top||[]).filter(r=>(model==='基础预测'||r['预测类型']===model) && (mon==='全部'||r['预测月份']===mon) && (series==='全部'||(r['系列名称']||'')===series) && (category==='全部'||(r['三级类目']||'')===category) && qmatch(r));
  rowsToTable(document.getElementById('reviewTable'),rev.slice(0,60),[['预测月份','月份'],['SKU','SKU'],['产品名称','产品名称'],['系列名称','系列'],['三级类目','类目'],['负责人（运营）','运营'],['产品定位','定位'],['基准预测','基准',null,money],['人工预测销量','人工',null,money],['基准-人工','差异',cls,money],['差异率','差异率',cls,v=>(+v*100).toFixed(1)+'%'],['复核标签','标签',null,v=>`<span class="pill danger">${v}</span>`]]);
  document.getElementById('src').innerHTML=`<b>数据源：</b>${DATA.source_file}<br><b>生成时间：</b>${DATA.generated_at}｜<b>源文件更新时间：</b>${DATA.meta.source_mtime}｜<b>口径：</b>${DATA.meta.forecast_object}，${DATA.meta.forecast_period}，${DATA.meta.grain}｜<b>系列筛选：</b>${series}｜<b>三级类目：</b>${category}`
