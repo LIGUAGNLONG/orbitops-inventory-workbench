@@ -22,16 +22,16 @@
   <main class="main">
     <header class="top">
       <div><div class="title" id="pageTitle">OrbitOps运营数据工作台｜库存监控</div><div class="crumb" id="pageCrumb">飞书工作台 / 运营看板 / 库存监控 · FBA仓库存 + 海外仓库存</div></div>
-      <div class="actions"><span class="pill">FBA仓库存 + 海外仓库存</span><span class="pill">FBA库龄：数量 + 成本</span><a class="btn" id="openNew" href="dashboard.html?v=20260805_inventory_remove_cost_kpi" target="_blank">新窗口打开当前模块</a></div>
+      <div class="actions"><span class="pill">FBA仓库存 + 海外仓库存</span><span class="pill">FBA库龄：数量 + 成本</span><a class="btn" id="openNew" href="dashboard.html?v=20260805_inventory_remove_top_kpi_row" target="_blank">新窗口打开当前模块</a></div>
     </header>
     <section class="content">
-      <div class="frame-card"><div class="frame-head"><div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div id="frameLabel">库存监控看板</div></div><iframe id="mainFrame" src="dashboard.html?v=20260805_inventory_remove_cost_kpi"></iframe></div>
+      <div class="frame-card"><div class="frame-head"><div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div id="frameLabel">库存监控看板</div></div><iframe id="mainFrame" src="dashboard.html?v=20260805_inventory_remove_top_kpi_row"></iframe></div>
     </section>
   </main>
 </div>
 <script>
 const navs=[...document.querySelectorAll('.nav')], frame=document.getElementById('mainFrame'), openNew=document.getElementById('openNew');
-const BUILD_VERSION='20260805_inventory_remove_cost_kpi';
+const BUILD_VERSION='20260805_inventory_remove_top_kpi_row';
 function versioned(src){ return src + (src.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(BUILD_VERSION); }
 navs.forEach(btn=>btn.addEventListener('click',()=>{
   navs.forEach(x=>x.classList.remove('active')); btn.classList.add('active');
