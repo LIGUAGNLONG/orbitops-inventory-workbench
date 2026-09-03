@@ -18,21 +18,21 @@
     <button class="nav" data-src="fba_age_dashboard.html" data-title="在库库龄" data-crumb="飞书工作台 / 运营看板 / 在库库龄 · FBA库龄成本 + 数量">📦<small>在库库龄</small></button>
     <button class="nav" data-src="shipping_plan_dashboard.html" data-title="出货计划" data-crumb="飞书工作台 / 运营看板 / 出货计划 · 产品等级 × 预测开始日期 × 数量">🚚<small>出货计划</small></button>
     <button class="nav" data-src="forecast_dashboard.html" data-title="需求预测" data-crumb="需求预测：读取 04_需求计划 最新预测数据，基础预测 / LightGBM / CatBoost / 人工预测对比">📈<small>需求预测</small></button>
-    <button class="nav" data-src="forecast_accuracy_dashboard.html?v=20260903091044_forecast_accuracy" data-title="预测准确率" data-crumb="预测准确率：补货模型合并表版本 × 月份预测字段 × 实际销量"><span class="nav-icon">准</span><small>预测准确率</small></button>
+    <button class="nav" data-src="forecast_accuracy_dashboard.html?v=20260903092804_forecast_accuracy" data-title="预测准确率" data-crumb="预测准确率：补货模型合并表版本 × 月份预测字段 × 实际销量"><span class="nav-icon">准</span><small>预测准确率</small></button>
   </aside>
   <main class="main">
     <header class="top">
       <div><div class="title" id="pageTitle">OrbitOps运营数据工作台｜库存监控</div><div class="crumb" id="pageCrumb">飞书工作台 / 运营看板 / 库存监控 · FBA仓库存 + 海外仓库存</div></div>
-      <div class="actions"><span class="pill">FBA仓库存 + 海外仓库存</span><span class="pill">FBA库龄：数量 + 成本</span><a class="btn" id="openNew" href="dashboard.html?v=20260903091044_forecast_accuracy" target="_blank">新窗口打开当前模块</a></div>
+      <div class="actions"><span class="pill">FBA仓库存 + 海外仓库存</span><span class="pill">FBA库龄：数量 + 成本</span><a class="btn" id="openNew" href="dashboard.html?v=20260903092804_forecast_accuracy" target="_blank">新窗口打开当前模块</a></div>
     </header>
     <section class="content">
-      <div class="frame-card"><iframe id="mainFrame" src="dashboard.html?v=20260903091044_forecast_accuracy"></iframe></div>
+      <div class="frame-card"><iframe id="mainFrame" src="dashboard.html?v=20260903092804_forecast_accuracy"></iframe></div>
     </section>
   </main>
 </div>
 <script>
 const navs=[...document.querySelectorAll('.nav')], frame=document.getElementById('mainFrame'), openNew=document.getElementById('openNew');
-const BUILD_VERSION='20260903091044_forecast_accuracy';
+const BUILD_VERSION='20260903092804_forecast_accuracy';
 function versioned(src){ return src + (src.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(BUILD_VERSION); }
 
 frame.addEventListener('load',()=>{[500,1500,3500,7000].forEach(t=>setTimeout(()=>{try{frame.contentWindow&&frame.contentWindow.apply&&frame.contentWindow.apply()}catch(e){console.warn('module delayed render skipped',e)}},t));});
