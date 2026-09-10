@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>销量分析｜OrbitOps</title>
+<style>
+:root{--bg:#f3f7fb;--panel:#fff;--ink:#182335;--muted:#667085;--line:#dde6f1;--blue:#2563eb;--cyan:#06b6d4;--green:#16a34a;--red:#dc2626;--amber:#d97706;--shadow:0 10px 28px rgba(15,23,42,.08)}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#f8fbff,#edf4fb);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif}.wrap{padding:20px 22px 36px}.hero{background:linear-gradient(135deg,#11233d,#1d4ed8 55%,#06b6d4);color:white;border-radius:22px;padding:22px;box-shadow:var(--shadow)}.hero h1{margin:0 0 8px;font-size:24px}.hero p{margin:0;color:#dbeafe}.toolbar{margin-top:16px;display:grid;grid-template-columns:1.4fr repeat(4, minmax(130px,.7fr));gap:12px}.control{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.24);border-radius:14px;padding:9px 10px}.control label{display:block;font-size:12px;color:#bfdbfe;margin-bottom:5px}.control input,.control select{width:100%;border:0;border-radius:9px;padding:8px 9px;background:white;color:#111827;font-weight:650}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:16px 0}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow)}.card .label{font-size:12px;color:var(--muted)}.card .value{font-size:25px;font-weight:850;margin-top:7px}.card .sub{font-size:12px;color:var(--muted);margin-top:6px}.up{color:var(--green)}.down{color:var(--red)}.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.section{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:16px}.section h2{margin:0 0 12px;font-size:17px}.chart{width:100%;height:310px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0}.reasons{display:grid;gap:10px}.reason{border-left:4px solid var(--blue);background:#f8fafc;border-radius:12px;padding:10px 12px}.reason.bad{border-left-color:var(--red)}.reason.good{border-left-color:var(--green)}.reason .t{font-weight:800}.reason .d{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45}.table-wrap{margin-top:14px;overflow:auto;max-height:620px;border:1px solid var(--line);border-radius:16px}table{width:100%;border-collapse:collapse;background:white;font-size:12px}th,td{padding:10px 9px;border-bottom:1px solid #edf2f7;vertical-align:top}th{position:sticky;top:0;background:#f8fafc;text-align:left;color:#475569;z-index:1}td.num{text-align:right;font-variant-numeric:tabular-nums}.analysis{min-width:310px;line-height:1.45}.tag{display:inline-block;border-radius:999px;padding:2px 7px;font-size:11px;background:#e0f2fe;color:#0369a1;margin-right:4px;margin-bottom:3px}.tag.red{background:#fee2e2;color:#991b1b}.tag.green{background:#dcfce7;color:#166534}.note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}.footer{margin-top:14px;color:var(--muted);font-size:12px}.full{grid-column:1 / -1}@media(max-width:1050px){.toolbar,.cards,.grid{grid-template-columns:1fr}.chart{height:260px}}
+</style>
+</head>
+<body><div class="wrap">
+  <div class="hero">
+    <h1>销量分析模块</h1>
+    <p>数据维度：2025年1月至最新入库日期；支持月/周环比与同期同比；每个 SKU 自动生成三条增长/下降原因。</p>
+    <div class="toolbar">
+      <div class="control"><label>SKU搜索/选择</label><input id="skuSearch" list="skuList" placeholder="输入 SKU / ASIN / 名称，留空看全部"/><datalist id="skuList"></datalist></div>
+      <div class="control"><label>时间粒度</label><select id="grain"><option value="month">按月</option><option value="week">按周</option></select></div>
+      <div class="control"><label>当前区间</label><select id="period"></select></div>
+      <div class="control"><label>对比方式</label><select id="compareMode"><option value="prev">上期对比</option><option value="yoy">同期去年</option></select></div>
+      <div class="control"><label>表格范围</label><select id="scope"><option value="all">全部SKU</option><option value="growth">只看增长</option><option value="decline">只看下降</option><option value="active">只看有销量</option></select></div>
+    </div>
+  </div>
+  <div class="cards">
+    <div class="card"><div class="label">当前销量</div><div class="value" id="kQty">-</div><div class="sub" id="kQtySub">-</div></div>
+    <div class="card"><div class="label">当前订单</div><div class="value" id="kOrders">-</div><div class="sub" id="kOrdersSub">-</div></div>
+    <div class="card"><div class="label">销售额</div><div class="value" id="kAmount">-</div><div class="sub" id="kAmountSub">-</div></div>
+    <div class="card"><div class="label">动销SKU</div><div class="value" id="kSku">-</div><div class="sub" id="kSkuSub">按当前筛选</div></div>
+  </div>
+  <div class="grid">
+    <div class="section"><h2>销量趋势</h2><svg id="chart" class="chart"></svg><div class="note">折线显示所选 SKU 或全部 SKU 的销量趋势；当前区间会高亮。</div></div>
+    <div class="section"><h2>当前筛选核心原因</h2><div id="topReasons" class="reasons"></div></div>
+    <div class="section full"><h2>SKU销量对比与原因</h2><div class="table-wrap"><table><thead><tr><th>SKU</th><th>ASIN/名称</th><th>当前销量</th><th>对比销量</th><th>变化</th><th>订单/金额</th><th>三条核心原因</th></tr></thead><tbody id="tbody"></tbody></table></div><div class="footer" id="meta"></div></div>
+  </div>
+</div>
+<script src="sales_analysis_data.json"></script>
+<script>
+const DATA = window.SALES_ANALYSIS_DATA || {records:[],skus:[],meta:{}};
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n||0).toLocaleString('zh-CN',{maximumFractionDigits:0});
+const money=n=>Number(n||0).toLocaleString('zh-CN',{maximumFractionDigits:0});
+const pct=n=>!isFinite(n)?'—':(n>=0?'+':'')+(n*100).toFixed(1)+'%';
+function cls(n){return n>=0?'up':'down'}
+function periods(grain){return [...new Set(DATA.records.filter(r=>r.period_type===grain).map(r=>r.period))].sort()}
+function prevPeriod(p,grain){let ps=periods(grain),i=ps.indexOf(p);return i>0?ps[i-1]:null}
+function yoyPeriod(p,grain){if(grain==='month'){let [y,m]=p.split('-').map(Number);return (y-1)+'-'+String(m).padStart(2,'0')} let d=new Date(p+'T00:00:00'); d.setDate(d.getDate()-364); return d.toISOString().slice(0,10)}
+function getSkuText(){return $('skuSearch').value.trim().toLowerCase()}
+function matchSku(r){let q=getSkuText(); if(!q)return true; return [r.sku,r.asin,r.name,r.category].join(' ').toLowerCase().includes(q)}
+function rowsFor(period,grain){return DATA.records.filter(r=>r.period_type===grain && r.period===period && matchSku(r))}
+function agg(rows){return rows.reduce((a,r)=>{a.qty+=+r.qty||0;a.orders+=+r.orders||0;a.amount+=+r.amount||0;a.return_qty+=+r.return_qty||0;a.cancel_qty+=+r.cancel_qty||0;a.stockout_days+=+r.stockout_days||0;if((+r.qty||0)>0)a.skus.add(r.sku);return a},{qty:0,orders:0,amount:0,return_qty:0,cancel_qty:0,stockout_days:0,skus:new Set()})}
+function skuMap(rows){let m=new Map(); rows.forEach(r=>m.set(r.sku,r)); return m}
+function reasonList(cur,cmp){let cq=+((cur&&cur.qty)||0), pq=+((cmp&&cmp.qty)||0), co=+((cur&&cur.orders)||0), po=+((cmp&&cmp.orders)||0), ca=+((cur&&cur.amount)||0), pa=+((cmp&&cmp.amount)||0);
+ let dq=cq-pq, dp=pq?dq/pq:(cq>0?1:0), arCur=cq?ca/cq:0, arPrev=pq?pa/pq:0, odCur=co&&cq?cq/co:0, odPrev=po&&pq?pq/po:0;
+ let arr=[];
+ if(dq>=0){
+   arr.push(['green','销量增长',`销量 ${fmt(pq)} → ${fmt(cq)}，增加 ${fmt(dq)}，变化 ${pct(dp)}。`]);
+   if(co>po) arr.push(['green','订单拉动',`订单 ${fmt(po)} → ${fmt(co)}，说明需求端或转化承接增强。`]); else arr.push(['red','订单未同步放大',`销量增长但订单未明显增加，需检查批量单/B2B/口径。`]);
+   if(arCur>=arPrev) arr.push(['green','客单/价格稳定',`单件金额 ${money(arPrev)} → ${money(arCur)}，价格承接未拖累增长。`]); else arr.push(['red','价格让利换量',`单件金额 ${money(arPrev)} → ${money(arCur)}，增长中含降价/折扣因素。`]);
+   if((cur.stockout_days||0)<(cmp.stockout_days||0)) arr.push(['green','缺货压制减少',`缺货天数下降，销量承接能力改善。`]);
+ }else{
+   arr.push(['red','销量下降',`销量 ${fmt(pq)} → ${fmt(cq)}，减少 ${fmt(-dq)}，变化 ${pct(dp)}。`]);
+   if(co<po) arr.push(['red','订单减少',`订单 ${fmt(po)} → ${fmt(co)}，需求/流量/转化端走弱。`]); else arr.push(['red','单均件数下降',`订单未同步下降但销量下降，可能是套装/批量单减少。`]);
+   if(arCur<arPrev) arr.push(['red','金额承接变弱',`单件金额 ${money(arPrev)} → ${money(arCur)}，价格或折扣承压。`]); else arr.push(['green','价格未明显拖累',`单件金额 ${money(arPrev)} → ${money(arCur)}，下降主因更可能在流量/订单。`]);
+   if((cur.stockout_days||0)>(cmp.stockout_days||0)) arr.push(['red','疑似缺货影响',`缺货天数增加，需核对FBA/海外仓可售。`]);
+ }
+ return arr.slice(0,3);
+}
+function fillControls(){let dl=$('skuList'); dl.innerHTML=DATA.skus.slice(0,2500).map(s=>`<option value="${s.sku}">${s.asin||''} ${s.product_name||''}</option>`).join(''); let grain=$('grain').value; let ps=periods(grain); $('period').innerHTML=ps.map(p=>`<option value="${p}">${p}</option>`).join(''); $('period').value=ps[ps.length-1]||'';}
+function drawChart(){let grain=$('grain').value, curP=$('period').value, ps=periods(grain).slice(-24), vals=ps.map(p=>agg(rowsFor(p,grain)).qty), max=Math.max(...vals,1), w=900,h=310,pad=36; let pts=vals.map((v,i)=>[pad+i*(w-2*pad)/Math.max(1,vals.length-1), h-pad-v/max*(h-2*pad)]); let svg=$('chart'); svg.setAttribute('viewBox',`0 0 ${w} ${h}`); let path=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' '); svg.innerHTML=`<rect x="0" y="0" width="${w}" height="${h}" fill="#f8fafc"/><g stroke="#e2e8f0">${[0,1,2,3].map(i=>`<line x1="${pad}" x2="${w-pad}" y1="${pad+i*(h-2*pad)/3}" y2="${pad+i*(h-2*pad)/3}"/>`).join('')}</g><path d="${path}" fill="none" stroke="#2563eb" stroke-width="3"/>`+pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="${ps[i]===curP?6:4}" fill="${ps[i]===curP?'#dc2626':'#2563eb'}"/><text x="${p[0]}" y="${h-10}" text-anchor="middle" font-size="10" fill="#64748b">${ps[i].slice(5)}</text>${vals[i]>0?`<text x="${p[0]}" y="${Math.max(12,p[1]-9)}" text-anchor="middle" font-size="10" fill="#334155">${fmt(vals[i])}</text>`:''}`).join('');}
+function apply(){let grain=$('grain').value, p=$('period').value, cmpP=$('compareMode').value==='prev'?prevPeriod(p,grain):yoyPeriod(p,grain); let cur=rowsFor(p,grain), cmp=rowsFor(cmpP,grain), A=agg(cur), B=agg(cmp), d=A.qty-B.qty, r=B.qty?d/B.qty:(A.qty?1:0); $('kQty').textContent=fmt(A.qty); $('kQtySub').innerHTML=`对比 ${cmpP||'—'}：<span class="${cls(d)}">${fmt(d)} / ${pct(r)}</span>`; $('kOrders').textContent=fmt(A.orders); $('kOrdersSub').innerHTML=`对比订单：<span class="${cls(A.orders-B.orders)}">${fmt(A.orders-B.orders)}</span>`; $('kAmount').textContent=money(A.amount); $('kAmountSub').innerHTML=`对比金额：<span class="${cls(A.amount-B.amount)}">${money(A.amount-B.amount)}</span>`; $('kSku').textContent=fmt(A.skus.size); let cm=skuMap(cmp), scope=$('scope').value; let rows=cur.map(x=>{let y=cm.get(x.sku)||{}; let delta=(+x.qty||0)-(+y.qty||0); return {x,y,delta,rate:y.qty?delta/y.qty:(x.qty?1:0)}}).filter(o=>scope==='all'||(scope==='growth'&&o.delta>0)||(scope==='decline'&&o.delta<0)||(scope==='active'&&o.x.qty>0)).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)); $('topReasons').innerHTML=reasonList({qty:A.qty,orders:A.orders,amount:A.amount,stockout_days:A.stockout_days},{qty:B.qty,orders:B.orders,amount:B.amount,stockout_days:B.stockout_days}).map(x=>`<div class="reason ${x[0]==='red'?'bad':'good'}"><div class="t">${x[1]}</div><div class="d">${x[2]}</div></div>`).join(''); $('tbody').innerHTML=rows.slice(0,500).map(o=>{let r=o.x,y=o.y||{}, tags=reasonList(r,y).map(z=>`<span class="tag ${z[0]==='red'?'red':'green'}">${z[1]}</span><br><span>${z[2]}</span>`).join('<br>'); return `<tr><td><b>${r.sku}</b><br><span class="tag">${r.category||'未分类'}</span></td><td>${r.asin||''}<br><span style="color:#667085">${r.name||''}</span></td><td class="num"><b>${fmt(r.qty)}</b></td><td class="num">${fmt(y.qty||0)}</td><td class="num"><span class="${cls(o.delta)}"><b>${fmt(o.delta)}</b><br>${pct(o.rate)}</span></td><td class="num">订单 ${fmt(r.orders)}<br>金额 ${money(r.amount)}</td><td class="analysis">${tags}</td></tr>`}).join(''); $('meta').textContent=`当前区间 ${p}，对比区间 ${cmpP||'无'}；数据最新日期 ${DATA.meta.latest_date}；本页最多展示500行，按销量变化绝对值排序。`; drawChart();}
+$('grain').addEventListener('change',()=>{fillControls();apply()}); ['period','compareMode','scope'].forEach(id=>$(id).addEventListener('change',apply)); $('skuSearch').addEventListener('input',apply); fillControls(); apply();
+</script></body></html>
