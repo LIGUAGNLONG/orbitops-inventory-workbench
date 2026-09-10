@@ -34,7 +34,7 @@
     <div class="section full"><h2>SKU销量对比与原因</h2><div class="table-wrap"><table><thead><tr><th>SKU</th><th>ASIN/名称</th><th>当前销量</th><th>对比销量</th><th>变化</th><th>订单/金额</th><th>三条核心原因</th></tr></thead><tbody id="tbody"></tbody></table></div><div class="footer" id="meta"></div></div>
   </div>
 </div>
-<script src="sales_analysis_data.json"></script>
+<script src="sales_analysis_data.json?v=20260910164631_sales_analysis"></script>
 <script>
 const DATA = window.SALES_ANALYSIS_DATA || {records:[],skus:[],meta:{}};
 const SKU_INFO = new Map((DATA.skus||[]).map(s=>[s.sku,s]));
