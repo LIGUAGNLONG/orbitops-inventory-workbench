@@ -34,7 +34,7 @@
     <div class="section full"><h2>SKU销量对比与原因</h2><div class="table-wrap"><table><thead><tr><th>SKU</th><th>ASIN/名称</th><th>当前销量</th><th>对比销量</th><th>变化</th><th>订单/金额</th><th>三条核心原因</th></tr></thead><tbody id="tbody"></tbody></table></div><div class="footer" id="meta"></div></div>
   </div>
 </div>
-<script src="sales_analysis_data.json?v=20260910164631_sales_analysis"></script>
+<script src="sales_analysis_data.json?v=20260910170157_sales_analysis"></script>
 <script>
 const DATA = window.SALES_ANALYSIS_DATA || {records:[],skus:[],meta:{}};
 const SKU_INFO = new Map((DATA.skus||[]).map(s=>[s.sku,s]));
@@ -54,14 +54,17 @@ const METRICS=[
 const TREND_METRICS=METRICS.filter(m=>['qty','sessions_total','page_views_total','cvr','spend','acos','roas','ads_sales_volume_quantity','nature_order_items','promotion_volume','avg_price','fba_available','available_inventory'].includes(m.k));
 const TREND_COLORS=['#2563eb','#06b6d4','#7c3aed','#16a34a','#dc2626','#d97706','#db2777','#0891b2','#4f46e5','#65a30d','#ea580c','#475569','#0f766e'];
 let selectedMetrics=['qty','orders','amount','sessions_total','page_views_total','cvr','spend','acos','roas','ads_sales_volume_quantity','nature_order_items','promotion_volume','avg_price','fba_available','available_inventory','return_rate'];
-let selectedTrendMetrics=['qty','fba_available'];
+let trendMetricsByGrain={month:['qty','fba_available'],week:['qty','avg_price']};
+let selectedTrendMetrics=[...trendMetricsByGrain.month];
 let selectedCurrentPeriods=[], selectedComparePeriods=[], selectedCategories=[];
 function metricVal(r,k){r=r||{};let d=r.drivers||{}; if(k==='qty')return +r.qty||0; if(k==='orders')return +r.orders||0; if(k==='amount')return +r.amount||0; if(k==='avg_price')return (+r.qty||0)?(+r.amount||0)/(+r.qty||0):0; if(k==='return_rate')return (+r.qty||0)?(+r.return_qty||0)/(+r.qty||0):(+d.return_rate||0); return +(d[k]??0)||0;}
 function fmtMetric(v,t){if(t==='money')return money(v); if(t==='pctVal')return (v*100).toFixed(2)+'%'; if(t==='one')return Number(v||0).toFixed(2); return fmt(v);}
 function renderCheckboxMenu(menuId,items,selected,onChange,{allowEmpty=true,allLabel='全选',clearLabel='清空'}={}){let menu=$(menuId);menu.innerHTML=`<div class="metricActions"><button type="button" data-act="all">${allLabel}</button><button type="button" data-act="clear">${clearLabel}</button></div>`+items.map(x=>`<label><input type="checkbox" value="${x.v}" ${selected.includes(x.v)?'checked':''}/> ${x.l}</label>`).join('');menu.querySelectorAll('input').forEach(x=>x.addEventListener('change',()=>{let vals=[...menu.querySelectorAll('input:checked')].map(i=>i.value);if(!allowEmpty&&!vals.length){x.checked=true;return}onChange(vals)}));menu.querySelector('[data-act="all"]').onclick=()=>onChange(items.map(x=>x.v));menu.querySelector('[data-act="clear"]').onclick=()=>{if(allowEmpty)onChange([])};}
 function renderMetricMenu(){renderCheckboxMenu('metricMenu',METRICS.map(m=>({v:m.k,l:m.l})),selectedMetrics,vals=>{selectedMetrics=vals;renderMetricMenu();updateMetricBtn();apply()},{allowEmpty:true});}
 function updateMetricBtn(){let btn=$('metricBtn'); btn.textContent=selectedMetrics.length?`已选 ${selectedMetrics.length} 项`:'请选择指标';}
-function renderTrendMetricMenu(){renderCheckboxMenu('trendMetricMenu',TREND_METRICS.map(m=>({v:m.k,l:m.l})),selectedTrendMetrics,vals=>{selectedTrendMetrics=vals;renderTrendMetricMenu();updateTrendMetricBtn();drawChart()},{allowEmpty:true});}
+function availableTrendMetrics(grain){let rows=DATA.records.filter(r=>r.period_type===grain);return TREND_METRICS.filter(m=>m.k==='qty'||m.k==='avg_price'||rows.some(r=>hasMetric(r,m.k)))}
+function syncTrendMetricsForGrain(){let grain=$('grain').value,available=availableTrendMetrics(grain),keys=new Set(available.map(m=>m.k)),saved=(trendMetricsByGrain[grain]||[]).filter(k=>keys.has(k));if(!saved.length)saved=grain==='week'?['qty','avg_price'].filter(k=>keys.has(k)):['qty','fba_available'].filter(k=>keys.has(k));if(!saved.length&&available.length)saved=[available[0].k];selectedTrendMetrics=saved;trendMetricsByGrain[grain]=[...saved]}
+function renderTrendMetricMenu(){let grain=$('grain').value,available=availableTrendMetrics(grain);renderCheckboxMenu('trendMetricMenu',available.map(m=>({v:m.k,l:m.l})),selectedTrendMetrics,vals=>{selectedTrendMetrics=vals;trendMetricsByGrain[grain]=[...vals];renderTrendMetricMenu();updateTrendMetricBtn();drawChart()},{allowEmpty:false});}
 function updateTrendMetricBtn(){let labels=selectedTrendMetrics.map(k=>(TREND_METRICS.find(m=>m.k===k)||{}).l).filter(Boolean);$('trendMetricBtn').textContent=(labels.length?(labels.length<=2?labels.join(' + '):`已选 ${labels.length} 项`):'请选择指标')+' ▼';}
 function hasMetric(r,k){if(k==='qty'||k==='orders'||k==='amount'||k==='avg_price')return true;return r&&r.drivers&&Object.prototype.hasOwnProperty.call(r.drivers,k)}
 function trendAgg(rows,k){let valid=rows.filter(r=>hasMetric(r,k));if(!valid.length)return null;if(k==='qty'||k==='orders'||k==='amount'||k==='spend'||k==='sessions_total'||k==='page_views_total'||k==='ads_sales_volume_quantity'||k==='nature_order_items'||k==='promotion_volume'||k==='fba_available'||k==='available_inventory')return valid.reduce((s,r)=>s+metricVal(r,k),0);if(k==='avg_price'){let q=valid.reduce((s,r)=>s+(+r.qty||0),0),a=valid.reduce((s,r)=>s+(+r.amount||0),0);return q?a/q:0}if(k==='cvr'){let w=valid.reduce((s,r)=>s+(+(r.drivers||{}).sessions_total||0),0);return w?valid.reduce((s,r)=>s+metricVal(r,k)*(+(r.drivers||{}).sessions_total||0),0)/w:valid.reduce((s,r)=>s+metricVal(r,k),0)/valid.length}if(k==='acos'||k==='roas'){let w=valid.reduce((s,r)=>s+(+(r.drivers||{}).spend||0),0);return w?valid.reduce((s,r)=>s+metricVal(r,k)*(+(r.drivers||{}).spend||0),0)/w:valid.reduce((s,r)=>s+metricVal(r,k),0)/valid.length}return valid.reduce((s,r)=>s+metricVal(r,k),0)/valid.length}
@@ -121,5 +124,5 @@ function apply(){
 }
 function bindMenu(btnId,menuId){$(btnId).addEventListener('click',e=>{e.stopPropagation();document.querySelectorAll('.multiMenu.open').forEach(m=>{if(m.id!==menuId)m.classList.remove('open')});$(menuId).classList.toggle('open')});$(menuId).addEventListener('click',e=>e.stopPropagation());}
 ['period','compare','category','metric','trendMetric'].forEach(x=>bindMenu(x+'Btn',x+'Menu'));document.addEventListener('click',()=>document.querySelectorAll('.multiMenu.open').forEach(m=>m.classList.remove('open')));
-renderMetricMenu();updateMetricBtn();renderTrendMetricMenu();updateTrendMetricBtn();$('grain').addEventListener('change',()=>{fillControls();apply()});$('skuSearch').addEventListener('input',apply);fillControls();apply();
+renderMetricMenu();updateMetricBtn();syncTrendMetricsForGrain();renderTrendMetricMenu();updateTrendMetricBtn();$('grain').addEventListener('change',()=>{syncTrendMetricsForGrain();renderTrendMetricMenu();updateTrendMetricBtn();fillControls();apply()});$('skuSearch').addEventListener('input',apply);fillControls();apply();
 </script></body></html>
