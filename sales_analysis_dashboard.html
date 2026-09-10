@@ -29,12 +29,12 @@
     <div class="card"><div class="label">动销SKU</div><div class="value" id="kSku">-</div><div class="sub" id="kSkuSub">按当前筛选</div></div>
   </div>
   <div class="grid">
-    <div class="section"><div class="chartHead"><h2>趋势分析</h2><div class="multiBox chartMetricBox"><span class="trendSelectorLabel">趋势指标（多选）</span><button class="multiBtn" id="trendMetricBtn" type="button">销量 + FBA可售 ▼</button><div class="multiMenu" id="trendMetricMenu"></div></div></div><div class="chartLegend" id="chartLegend"></div><svg id="chart" class="chart"></svg><div class="note">趋势指标支持多选；不同量纲按各指标独立缩放，折线标签显示原始值。月度FBA可售优先取库存报表FBA仓“可售”期末数量；周度FBA可售及可用库存取领星产品表现字段。</div></div>
+    <div class="section"><div class="chartHead"><h2>趋势分析</h2><div class="multiBox chartMetricBox"><span class="trendSelectorLabel">趋势指标（多选）</span><button class="multiBtn" id="trendMetricBtn" type="button">已选 13 项 ▼</button><div class="multiMenu" id="trendMetricMenu"></div></div></div><div class="chartLegend" id="chartLegend"></div><svg id="chart" class="chart"></svg><div class="note">月度与周度默认展示相同的13项趋势指标；不同量纲按各指标独立缩放，折线标签显示原始值。月度FBA可售优先取库存报表FBA仓“可售”期末数量；周度FBA可售及可用库存取领星产品表现字段。</div></div>
     <div class="section"><h2>核心对比数据</h2><div id="metricCompare"></div><h2 style="margin-top:14px">当前筛选核心原因</h2><div id="topReasons" class="reasons"></div></div>
     <div class="section full"><h2>SKU销量对比与原因</h2><div class="table-wrap"><table><thead><tr><th>SKU</th><th>ASIN/名称</th><th>当前销量</th><th>对比销量</th><th>变化</th><th>订单/金额</th><th>三条核心原因</th></tr></thead><tbody id="tbody"></tbody></table></div><div class="footer" id="meta"></div></div>
   </div>
 </div>
-<script src="sales_analysis_data.json?v=20260910180433_sales_analysis"></script>
+<script src="sales_analysis_data.json?v=20260910181449_sales_analysis"></script>
 <script>
 const DATA = window.SALES_ANALYSIS_DATA || {records:[],skus:[],meta:{}};
 const SKU_INFO = new Map((DATA.skus||[]).map(s=>[s.sku,s]));
@@ -54,7 +54,8 @@ const METRICS=[
 const TREND_METRICS=METRICS.filter(m=>['qty','sessions_total','page_views_total','cvr','spend','acos','roas','ads_sales_volume_quantity','nature_order_items','promotion_volume','avg_price','fba_available','available_inventory'].includes(m.k));
 const TREND_COLORS=['#2563eb','#06b6d4','#7c3aed','#16a34a','#dc2626','#d97706','#db2777','#0891b2','#4f46e5','#65a30d','#ea580c','#475569','#0f766e'];
 let selectedMetrics=['qty','orders','amount','sessions_total','page_views_total','cvr','spend','acos','roas','ads_sales_volume_quantity','nature_order_items','promotion_volume','avg_price','fba_available','available_inventory','return_rate'];
-let trendMetricsByGrain={month:['qty','fba_available'],week:['qty','fba_available']};
+const DEFAULT_TREND_METRICS=['qty','sessions_total','page_views_total','cvr','spend','acos','roas','ads_sales_volume_quantity','nature_order_items','promotion_volume','avg_price','fba_available','available_inventory'];
+let trendMetricsByGrain={month:[...DEFAULT_TREND_METRICS],week:[...DEFAULT_TREND_METRICS]};
 let selectedTrendMetrics=[...trendMetricsByGrain.month];
 let selectedCurrentPeriods=[], selectedComparePeriods=[], selectedCategories=[];
 function metricVal(r,k){r=r||{};let d=r.drivers||{}; if(k==='qty')return +r.qty||0; if(k==='orders')return +r.orders||0; if(k==='amount')return +r.amount||0; if(k==='avg_price')return (+r.qty||0)?(+r.amount||0)/(+r.qty||0):0; if(k==='return_rate')return (+r.qty||0)?(+r.return_qty||0)/(+r.qty||0):(+d.return_rate||0); return +(d[k]??0)||0;}
