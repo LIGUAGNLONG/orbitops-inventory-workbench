@@ -34,7 +34,7 @@
 </div>
 <script>
 const navs=[...document.querySelectorAll('.nav')], frame=document.getElementById('mainFrame'), openNew=document.getElementById('openNew');
-const BUILD_VERSION='20260920124615_inventory_refresh';
+const BUILD_VERSION='20260920151030_fba_inventory_refresh';
 function versioned(src){ return src + (src.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(BUILD_VERSION); }
 
 frame.addEventListener('load',()=>{[500,1500,3500,7000].forEach(t=>setTimeout(()=>{try{frame.contentWindow&&frame.contentWindow.apply&&frame.contentWindow.apply()}catch(e){console.warn('module delayed render skipped',e)}},t));});
