@@ -34,9 +34,14 @@
     <div class="section full"><h2>SKU销量对比与原因</h2><div class="table-wrap"><table><thead><tr><th>SKU</th><th>ASIN/名称</th><th>当前销量</th><th>对比销量</th><th>变化</th><th>订单/金额</th><th>三条核心原因</th></tr></thead><tbody id="tbody"></tbody></table></div><div class="footer" id="meta"></div></div>
   </div>
 </div>
-<script src="sales_analysis_data.json?v=20261007154615_sales_analysis"></script>
+<script src="sales_analysis_data.json?v=20261012161009_sales_analysis"></script>
 <script>
 const DATA = window.SALES_ANALYSIS_DATA || {records:[],skus:[],meta:{}};
+// 发布载荷使用列式压缩，避免逐行重复字段名导致 GitHub Pages 单文件超过 100MB；运行时恢复为原有对象结构，后续筛选和图表逻辑不变。
+if(Array.isArray(DATA.records) && Array.isArray(DATA.records[0])){
+  const cols=DATA.record_columns||[];
+  DATA.records=DATA.records.map(values=>Object.fromEntries(cols.map((key,i)=>[key,values[i]])));
+}
 const SKU_INFO = new Map((DATA.skus||[]).map(s=>[s.sku,s]));
 const $=id=>document.getElementById(id);
 const fmt=n=>Number(n||0).toLocaleString('zh-CN',{maximumFractionDigits:0});
